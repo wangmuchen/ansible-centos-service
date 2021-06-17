@@ -1,0 +1,13 @@
+[appstream]
+name=appstream
+baseurl=http://10.10.70.111/centos/AppStream
+gpgcheck=0
+[baseos]
+name=baseos
+baseurl=http://10.10.70.111/centos/BaseOS
+gpgcheck=0
+[ha]
+name=ha
+baseurl=http://10.10.70.111/ha/HighAvailability
+gpgcheck=0
+

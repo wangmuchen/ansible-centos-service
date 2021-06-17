@@ -1,0 +1,44 @@
+---
+# 时间同步
+- name: chrony
+  gather_facts: false
+  remote_user: root
+  hosts: all
+  vars_files:
+  - vars/main.yml
+  tasks:
+
+
+  - name: install chrony
+    package:
+      name: chrony
+      state: present
+
+  - name: set chrony server
+    copy:
+      force: true
+      src: ./files/chrony.conf-server
+      dest: /etc/chrony.conf
+      mode: '0644'
+    when: host == "dns"
+
+  - name: set chrony client
+    copy:
+      force: true
+      src: ./files/chrony.conf-client
+      dest: /etc/chrony.conf
+      mode: '0644'
+    when: host != "dns"
+
+  - name: start chrony service
+    service:
+      name: chronyd
+      state: started
+      enabled: true
+
+  - name: set firewall
+    firewalld:
+      service: ntp
+      permanent: true
+      state: enabled
+      immediate: true

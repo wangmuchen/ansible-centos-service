@@ -1,0 +1,82 @@
+---
+# dns for pki CA
+# 如果不是第一次执行此脚本请删除目标服务器的/etc/pki/CA目录
+# 删除前请备份
+- name: bind
+  gather_facts: false
+  remote_user: root
+  hosts: all
+  vars_files:
+  - vars/main.yml
+  tasks:
+
+  - name: install cryptography
+    package:
+      name: python3-cryptography.x86_64
+      state: present
+    when: host == "dns"
+
+  - name: Create a directory
+    file:
+      path: /etc/pki/{{ item }}
+      state: directory
+      mode: '0755'
+    with_items:
+      - CA
+      - CA/certs
+      - CA/crl
+      - CA/private
+      - CA/newcerts
+    when: host == "dns"
+
+  - name: Generate an OpenSSL private key
+    openssl_privatekey:
+      path: /etc/pki/CA/private/cakey.pem
+      size: 2048
+    when: host == "dns"
+
+  - name: Generate an OpenSSL Certificate Signing Request with Subject information
+    openssl_csr:
+      path: /etc/pki/CA/careq.pem
+      privatekey_path: /etc/pki/CA/private/cakey.pem
+      country_name: CN
+      state_or_province_name: henan
+      locality_name: luoyang
+      organization_name: skills
+      organizational_unit_name: com
+      common_name: Linux-CA
+    when: host == "dns"
+
+  - name: Generate a Self Signed OpenSSL certificate
+    openssl_certificate:
+      path: /etc/pki/CA/cacert.pem
+      privatekey_path: /etc/pki/CA/private/cakey.pem
+      csr_path: /etc/pki/CA/careq.pem
+      entrust_not_after: "+3650d"
+      provider: selfsigned
+    when: host == "dns"
+
+  - name: touch index.txt
+    file:
+      path: /etc/pki/CA/index.txt
+      state: touch
+      mode: '0644'
+    when: host == "dns"
+
+  - name: create serial
+    lineinfile:
+      path: /etc/pki/CA/serial
+      line: '01'
+      create: true
+      mode: '0644'
+    when: host == "dns"
+
+  - name: set dns server
+    copy:
+      force: true
+      src: ./files/openssl.cnf
+      dest: /etc/pki/tls/openssl.cnf
+      mode: '0644'
+      owner: root
+      group: root
+    when: host == "dns"

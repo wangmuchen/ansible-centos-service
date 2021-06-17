@@ -1,0 +1,11 @@
+[all]
+10.10.70.111 host=dns hostname=dns.skills.com eth0_ip=10.10.70.111/24 if_eth1=0 if_eth2=0
+10.10.70.112 host=idm hostname=idm.skills.com eth0_ip=10.10.70.112/24 if_eth1=0 if_eth2=0
+10.10.70.113 host=app hostname=app.skills.com eth0_ip=10.10.70.113/24 eth1_ip=10.10.80.111/24 eth2_ip=10.10.80.112/24 if_eth1=1 if_eth2=1
+10.10.70.114 host=lin hostname=lin.skills.com eth0_ip=10.10.70.114/24 eth1_ip=10.10.80.113/24 eth2_ip=10.10.80.114/24 if_eth1=1 if_eth2=1
+10.10.70.115 host=str hostname=str.skills.com eth0_ip=10.10.70.115/24 eth1_ip=10.10.80.115/24 if_eth1=1 if_eth2=0
+10.10.70.116 host=node1 hostname=node1.skills.com eth0_ip=10.10.70.116/24 eth1_ip=10.10.80.116/24 if_eth1=1 if_eth2=0
+10.10.70.117 host=node2 hostname=node2.skills.com eth0_ip=10.10.70.117/24 eth1_ip=10.10.80.117/24 if_eth1=1 if_eth2=0
+
+[all:vars]
+os=linux

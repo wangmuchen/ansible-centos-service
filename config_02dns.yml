@@ -1,0 +1,80 @@
+---
+# dns for bind
+- name: bind
+  gather_facts: false
+  remote_user: root
+  hosts: all
+  vars_files:
+  - vars/main.yml
+  tasks:
+
+  - name: install bind
+    package:
+      name: bind
+      state: present
+    when: host == "dns"
+
+  - name: set dns server
+    copy:
+      force: true
+      src: ./files/named.conf
+      dest: /etc/named.conf
+      mode: '0640'
+      owner: root
+      group: named
+    when: host == "dns"
+
+  - name: set bind rfc1912
+    copy:
+      force: true
+      src: ./files/named.rfc1912.zones
+      dest: /etc/named.rfc1912.zones
+      mode: '0640'
+      owner: root
+      group: named
+    when: host == "dns"
+
+  - name: set bind zone
+    copy:
+      force: true
+      src: ./files/skills.com.zone
+      dest: /var/named/skills.com.zone
+      mode: '0640'
+      owner: root
+      group: named
+    when: host == "dns"
+
+  - name: set bind arpa
+    copy:
+      force: true
+      src: ./files/skills.com.arpa
+      dest: /var/named/skills.com.arpa
+      mode: '0640'
+      owner: root
+      group: named
+    when: host == "dns"
+
+  - name: set bind rndc
+    copy:
+      force: true
+      src: ./files/rndc.conf
+      dest: /etc/rndc.conf
+      mode: '0640'
+      owner: root
+      group: named
+    when: host == "dns"
+
+  - name: start bind service
+    service:
+      name: named
+      state: started
+      enabled: true
+    when: host == "dns"
+
+  - name: set firewall
+    firewalld:
+      service: dns
+      permanent: true
+      state: enabled
+      immediate: true
+    when: host == "dns"

@@ -1,0 +1,120 @@
+---
+# config NIS server
+- name: NIS
+  gather_facts: false
+  remote_user: root
+  hosts: all
+  vars_files:
+  - vars/main.yml
+  tasks:
+
+  - name: install nis-server and nfs packages
+    package:
+      name:
+        - ypserv
+        - rpcbind
+        - nfs-utils
+      state: present
+    when: host == "idm"
+
+  - name: add user
+    user:
+      name: "{{ item }}"
+    with_items:
+      - user1
+      - user2
+      - user3
+      - user4
+      - user5
+    when: host == "idm"
+
+  - name: set nis user directory for NFS
+    template:
+      force: true
+      src: ./files/idm-exports.j2
+      dest: /etc/exports
+      mode: '0644'
+      owner: root
+      group: root
+    when: host == "idm"
+
+  - name: set nis domain
+    command: "ypdomainname {{ domain }}"
+    when: host == "idm"
+
+  - name: set nis ststic domain
+    copy:
+      force: true
+      src: ./files/idm-network
+      dest: /etc/sysconfig/network
+      mode: '0644'
+      owner: root
+      group: root
+    when: host == "idm"
+
+  - name: set nis allowsubnet
+    copy:
+      force: true
+      src: ./files/idm-securenets
+      dest: /var/yp/securenets
+      mode: '0644'
+      owner: root
+      group: root
+    when: host == "idm"
+
+  - name: start nis service
+    service:
+      name: "{{ item }}"
+      state: started
+      enabled: true
+    with_items:
+      - rpcbind
+      - ypserv
+      - ypxfrd
+      - yppasswdd
+      - nis-domainname
+      - nfs-server
+    when: host == "idm"
+
+  - name: update nis databases
+    command: "echo -e '\004' | /usr/lib64/yp/ypinit -m"
+    when: host == "idm"
+
+  - name: set firewall
+    firewalld:
+      service:
+        - rpc-bind
+        - nfs
+        - mountd
+      port:
+        - 944-951/tcp
+        - 944-951/udp
+      permanent: true
+      state: enabled
+      immediate: true
+    when: host == "idm"
+
+  - name: install nis-client packages
+    package:
+      name:
+        - ypbind
+        - rpcbind
+        - oddjob-mkhomedir
+        - autofs
+      state: present
+    # Linux-3 and Linux-4
+    when: if_eth2 == 1
+
+  - name: set nis domain
+    command: "ypdomainname {{ domain }}"
+    when: if_eth2 == 1
+
+  - name: set nis ststic domain
+    copy:
+      force: true
+      src: ./files/idm-network
+      dest: /etc/sysconfig/network
+      mode: '0644'
+      owner: root
+      group: root
+    when: if_eth2 == 1

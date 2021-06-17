@@ -1,0 +1,7 @@
+---
+# network vars
+domain: skills.com
+subnet: 10.10.70
+gateway: 10.10.70.254
+dns_server: 10.10.70.111
+user_home: /home

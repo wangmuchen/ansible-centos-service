@@ -1,0 +1,17 @@
+$TTL 1D
+@	IN SOA	@ rname.invalid. (
+					0	; serial
+					1D	; refresh
+					1H	; retry
+					1W	; expire
+					3H )	; minimum
+	NS	@
+	A	255.255.255.0
+	PTR skills.com.
+111	PTR	dns.skills.com
+112	PTR	idm.skills.com
+113	PTR	app.skills.com
+114	PTR	lin.skills.com
+115	PTR	str.skills.com
+116	PTR	node1.skills.com
+117	PTR	node2.skills.com

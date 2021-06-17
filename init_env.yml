@@ -1,0 +1,123 @@
+---
+# 系统初始环境配置 网卡 yum
+- name: 系统初始环境配置
+  remote_user: root
+  hosts: all
+  vars_files:
+  - vars/main.yml
+  tasks:
+
+  - name: 删除 yum 源
+    file:
+      path: "/etc/yum.repos.d/{{ item }}"
+      state: absent
+    with_items:
+      - CentOS-Linux-AppStream.repo
+      - CentOS-Linux-BaseOS.repo
+      - CentOS-Linux-ContinuousRelease.repo
+      - CentOS-Linux-Debuginfo.repo
+      - CentOS-Linux-Devel.repo
+      - CentOS-Linux-Extras.repo
+      - CentOS-Linux-FastTrack.repo
+      - CentOS-Linux-HighAvailability.repo
+      - CentOS-Linux-Media.repo
+      - CentOS-Linux-Plus.repo
+      - CentOS-Linux-PowerTools.repo
+      - CentOS-Linux-Sources.repo
+
+  - name: 配置 yum 源
+    copy:
+      src: ./files/cd.repo
+      dest: /etc/yum.repos.d/cd.repo
+      mode: '0644'
+
+  - name: 挂载ISO镜像
+    mount:
+      path: /var/www/html/centos
+      src: /root/CentOS-8.3.2011-x86_64-dvd.iso
+      fstype: iso9660
+      opts: ro
+      state: present
+    when: host == "dns"
+
+  - name: 安装需要的包
+    package:
+      name:
+        - NetworkManager-libnm
+        - nm-connection-editor
+        - vim
+        - bash-completion
+        - wget
+        - lrzsz
+        # - libsemanage-python
+        # - policycoreutils-python
+      state: present
+
+  - name: 配置 eth0 地址
+    nmcli:
+      type: ethernet
+      conn_name: 'eth0'
+      ifname: 'eth0'
+      ip4: '{{ eth0_ip }}'
+      gw4: '{{ gateway }}'
+      dns4: '{{ dns_server }}'
+      autoconnect: true
+      state: present
+
+  - name: 配置 eth1 地址
+    nmcli:
+      type: ethernet
+      conn_name: 'eth1'
+      ifname: 'eth1'
+      ip4: '{{ eth1_ip }}'
+      autoconnect: true
+      state: present
+    when: if_eth1 == 1
+
+  - name: 配置 eth2 地址
+    nmcli:
+      type: ethernet
+      conn_name: 'eth2'
+      ifname: 'eth2'
+      ip4: '{{ eth2_ip }}'
+      autoconnect: true
+      state: present
+    when: if_eth2 == 1
+
+  - name: 删除多余的网卡配置
+    file:
+      path: "/etc/sysconfig/network-scripts/{{ item }}"
+      state: absent
+    with_items:
+      - ifcfg-Wired_connection_1
+      - ifcfg-Wired_connection_2
+      - ifcfg-Wired_connection_3
+
+  - name: add
+    command: nmcli connection modify eth0 ipv4.method manual
+    when: os == linux
+  - name: 网卡修改为手动
+    command: nmcli connection modify eth1 ipv4.method manual
+    when: if_eth1 == 1
+  - name: 网卡修改为手动
+    command: nmcli connection modify eth2 ipv4.method manual
+    when: if_eth2 == 1
+
+  - name: 重启 NetworkManager 服务
+    service:
+      name: NetworkManager
+      state: restarted
+
+  - name: 配置 hostname
+    hostname:
+      name: '{{ hostname }}'
+    when: ansible_domain != "skills.com"
+
+  - name: 配置时区为上海
+    timezone:
+      name: Asia/Shanghai
+
+  - name: 配置 selinux
+    selinux:
+      policy: targeted
+      state: permissive
